@@ -5,20 +5,28 @@ using UnityEngine;
 public class Healthing : MonoBehaviour
 {
     public int HealingAmount;
+    private Person2 PlayerScript;
+    private GameObject Player;
+    private HealthBar PlayerHealthBarScript;
     // Start is called before the first frame update
     void Start()
     {
-  
+        Player = GameObject.FindWithTag("Player");
+        PlayerScript = Player.GetComponent<Person2>();
+        PlayerHealthBarScript = Player.GetComponent<HealthBar>();
     }
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter(Collision collision)
     {
         Debug.Log("HealingOrbHasCollidedWith" + collision.gameObject.tag);
-        if (GameObject.Find("Player").GetComponent<HealthBar>().CurrentHealth<= GameObject.Find("Player").GetComponent<HealthBar>().MaxHealth)
+        if (PlayerHealthBarScript.CurrentHealth<= PlayerHealthBarScript.MaxHealth)
         {
             if (collision.gameObject.tag == ("Player"))
             {
-                GameObject.Find("Player").GetComponent<HealthBar>().Heal(HealingAmount);
-                Destroy(gameObject);
+                if (PlayerHealthBarScript.CurrentHealth != PlayerHealthBarScript.MaxHealth)
+                {
+                    PlayerHealthBarScript.Heal(HealingAmount);
+                    Destroy(gameObject);
+                }
             }
         }
 

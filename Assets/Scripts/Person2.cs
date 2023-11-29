@@ -96,6 +96,14 @@ public class Person2 : MonoBehaviour
         {
             Attack();
         }
+        if (!Grounded)
+        {
+            ridge.drag = 0;
+        }
+        else if (Grounded)
+        {
+            ridge.drag = 5;
+        }
     }
     private void FixedUpdate()
     {
@@ -115,7 +123,6 @@ public class Person2 : MonoBehaviour
             HasJumped = true;
             Debug.Log("HasJumped? " + HasJumped);
             ridge.AddForce(new Vector3(Hoz, JumpForce, Vert));
-            ridge.drag = 0;
             Speed = BaseSpeed / 3;
         }
     }
@@ -132,8 +139,11 @@ public class Person2 : MonoBehaviour
 
     private void Sprint()
     {
-        Speed = Speed * 2;
-        Debug.Log("is Sprinting");
+        if (Grounded)
+        {
+            Speed = Speed * 2;
+            Debug.Log("is Sprinting");
+        }
     }
     private void Walk()
     {

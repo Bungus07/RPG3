@@ -30,9 +30,9 @@ public class EnemyControls : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         PlayerScript = GameObject.FindWithTag("Player").GetComponent<Person2>();
-       // EnemyHealthBar = gameObject.GetComponentInChildren<Slider>();
-       // EnemyHealthBar.maxValue = EnemyHealth;
-       // EnemyHealthBar.value = EnemyHealth;
+        EnemyHealthBar = gameObject.GetComponentInChildren<Slider>();
+        EnemyHealthBar.maxValue = EnemyHealth;
+        EnemyHealthBar.value = EnemyHealth;
     }
     private void FixedUpdate()
     {
