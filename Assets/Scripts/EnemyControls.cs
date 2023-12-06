@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class EnemyControls : MonoBehaviour
@@ -25,6 +26,30 @@ public class EnemyControls : MonoBehaviour
     public float KnockBackDistance;
     public int EnemyDamage;
     private Person2 PlayerScript;
+    [Header("DetectionRadious")]
+    public Collider DetectionRadious;
+    private GameObject Player;
+    private float LundgeTimer;
+    public float LundgeIntervul;
+    private bool IsLundging;
+    private bool LundgeTimerActivated;
+    public float LundgeDistance;
+    private float LundgeingTimer;
+    public float LundingInterval;
+    private Vector3 LundgePosition;
+    private Vector3 MoveDirection;
+
+    public enum EnemyState
+    {
+        [Header("AIstates")]
+        PatrolArea,
+        Lundge,
+        Stop
+    }
+    public EnemyState CurrentAction;
+    [Header("AI")]
+    private Vector3 PlayerCurrentPosition;
+    private Vector3 ChargePosition;
     // private Vector3 MoveDirection;
     private void Start()
     {
@@ -33,6 +58,7 @@ public class EnemyControls : MonoBehaviour
         EnemyHealthBar = gameObject.GetComponentInChildren<Slider>();
         EnemyHealthBar.maxValue = EnemyHealth;
         EnemyHealthBar.value = EnemyHealth;
+        Player = GameObject.FindWithTag("Player");
     }
     private void FixedUpdate()
     {
@@ -42,22 +68,72 @@ public class EnemyControls : MonoBehaviour
         // Check if the enemy is grounded
         isGrounded = Physics.Raycast(transform.position, Vector3.down, Distance, groundLayer);
         // Move the enemy horizontally
-        Move();
-
         // Check if the enemy should jump
         if (isGrounded)
         {
-            Jump();
+            //Jump();
         }
         if (EnemyHealth <= 0) 
         {
             EnemyDeath();
         }
+        if (CurrentAction == EnemyState.PatrolArea)
+        {
+            Move();
+        }
+        if (CurrentAction == EnemyState.Lundge)
+        {
+            if (isGrounded)
+            {
+                PlayerCurrentPosition = Player.transform.position;
+                Vector3 PlayerPositionNotY = new Vector3(Player.transform.position.x,gameObject.transform.position.y,Player.transform.position.z);
+                LundgeTimer += Time.deltaTime;
+                if (IsLundging == true)
+                {
+                    LundgeingTimer += Time.deltaTime;
+                    Debug.Log("LundgingTimerIsIncreasing");
+                    if (LundgeingTimer >= LundingInterval)
+                    {
+                        MoveDirection = transform.forward;
+                        rb.velocity = MoveDirection * moveSpeed;
+                        Debug.Log("LundgeTimer=LundgeInterval");
+                        if (Vector3.Distance(gameObject.transform.position, LundgePosition) < 0.05f)
+                        {
+                            LundgeingTimer = 0;
+                            IsLundging = false;
+                            CurrentAction = EnemyState.Stop;
+                        }
+                    }
+                }
+                else if (IsLundging == false)
+                {
+                    transform.LookAt(PlayerPositionNotY);
+                    if (LundgeTimer >= LundgeIntervul)
+                    {
+                        Lundge(Player.transform);
+                    }
+                }
+            }
+        } 
+    }
+    private void Lundge(Transform Target)
+    {
+        Debug.Log("EnemyShouldBeLundgeing");
+        LundgePosition = new Vector3(0, Target.position.y,Target.position.z);
+        transform.LookAt(LundgePosition);
+        IsLundging = true;
+        LundgeTimer = 0;
     }
     public void DamageEnemy(int DamageAmount)
     {
         EnemyHealth = EnemyHealth - DamageAmount;
         EnemyHealthBar.value = EnemyHealth;
+    }
+    public void PlayerDetect()
+    {
+        CurrentAction = EnemyState.Lundge;
+        LundgeTimerActivated = true;
+        Debug.Log("PlayerHasBeenDetected");
     }
     private void Move()
     {
@@ -74,7 +150,7 @@ public class EnemyControls : MonoBehaviour
     private void Jump()
     {
         // Add vertical force to make the enemy jump
-        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        // rb.velocity = new Vector2(rb.velocity.x, jumpForce);
     }
 
     private void Flip()

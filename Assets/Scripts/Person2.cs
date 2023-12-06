@@ -67,6 +67,10 @@ public class Person2 : MonoBehaviour
             Destroy(Collider.gameObject);
             Debug.Log("Player has collected a coin!");
         }
+        if (Collider.gameObject.tag == ("EnemyDetectionRadious"))
+        {
+            Collider.gameObject.GetComponent<EnemyDetectionSphere>().Target.gameObject.GetComponent<EnemyControls>().PlayerDetect();
+        }
     }
     // Update is called once per frame
     void Update()
