@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 public class EnemyControls : MonoBehaviour
 {
-    public float moveSpeed = 2f;
+    public float BaseSpeed = 2f;
+    private float Speed;
     public float jumpForce = 5f;
     public Transform groundCheck;
     public LayerMask groundLayer;
@@ -38,13 +39,18 @@ public class EnemyControls : MonoBehaviour
     public float LundingInterval;
     private Vector3 LundgePosition;
     private Vector3 MoveDirection;
+    private float ReturnPostimer;
+    public float ReturnPostimerInterval;
+    private Vector3 EnemyOrigonalPosition;
+    private Quaternion EnemyOrigonalRotation;
 
     public enum EnemyState
     {
         [Header("AIstates")]
         PatrolArea,
         Lundge,
-        Stop
+        Stop,
+        ReturnToPosition
     }
     public EnemyState CurrentAction;
     [Header("AI")]
@@ -59,6 +65,9 @@ public class EnemyControls : MonoBehaviour
         EnemyHealthBar.maxValue = EnemyHealth;
         EnemyHealthBar.value = EnemyHealth;
         Player = GameObject.FindWithTag("Player");
+        EnemyOrigonalPosition = gameObject.transform.position;
+        EnemyOrigonalRotation = gameObject.transform.rotation;
+        Speed = BaseSpeed;
     }
     private void FixedUpdate()
     {
@@ -69,6 +78,27 @@ public class EnemyControls : MonoBehaviour
         isGrounded = Physics.Raycast(transform.position, Vector3.down, Distance, groundLayer);
         // Move the enemy horizontally
         // Check if the enemy should jump
+        if (CurrentAction == EnemyState.Stop)
+        {
+            rb.velocity = Vector3.zero;
+            LundgeTimerActivated = false;
+            LundgeTimer = 0;
+            ReturnPostimer += Time.deltaTime;
+            if (ReturnPostimer >= ReturnPostimerInterval)
+            {
+                CurrentAction = EnemyState.ReturnToPosition;
+            }
+        }
+        if (CurrentAction == EnemyState.ReturnToPosition)
+        {
+            transform.LookAt(EnemyOrigonalPosition);
+            rb.velocity = transform.forward * BaseSpeed;
+            if (Vector3.Distance(gameObject.transform.position, EnemyOrigonalPosition) < 0.2f)
+            {
+                gameObject.transform.rotation = EnemyOrigonalRotation;
+                CurrentAction = EnemyState.PatrolArea;
+            }
+        }
         if (isGrounded)
         {
             //Jump();
@@ -95,10 +125,11 @@ public class EnemyControls : MonoBehaviour
                     if (LundgeingTimer >= LundingInterval)
                     {
                         MoveDirection = transform.forward;
-                        rb.velocity = MoveDirection * moveSpeed;
+                        rb.velocity = MoveDirection * BaseSpeed;
                         Debug.Log("LundgeTimer=LundgeInterval");
-                        if (Vector3.Distance(gameObject.transform.position, LundgePosition) < 0.05f)
+                        if (Vector3.Distance(gameObject.transform.position, LundgePosition) < 1.2f)
                         {
+                            Debug.Log("ShouldStopLunding");
                             LundgeingTimer = 0;
                             IsLundging = false;
                             CurrentAction = EnemyState.Stop;
@@ -119,8 +150,10 @@ public class EnemyControls : MonoBehaviour
     private void Lundge(Transform Target)
     {
         Debug.Log("EnemyShouldBeLundgeing");
-        LundgePosition = new Vector3(0, Target.position.y,Target.position.z);
-        transform.LookAt(LundgePosition);
+        LundgePosition = new Vector3(Target.position.x, 0,Target.position.z);
+        DebugExtension.DebugWireSphere(LundgePosition, 1, 10, true);
+        Vector3 LundgeRotaion = Target.transform.position;
+        transform.LookAt(LundgeRotaion);
         IsLundging = true;
         LundgeTimer = 0;
     }
@@ -138,7 +171,7 @@ public class EnemyControls : MonoBehaviour
     private void Move()
     {
         float horizontalInput = isFacingFowards ? 1f : -1f;
-        Vector3 movement = new Vector3(horizontalInput * moveSpeed, rb.velocity.y);
+        Vector3 movement = new Vector3(horizontalInput * BaseSpeed, rb.velocity.y);
         rb.velocity = movement;
         Debug.Log("EnemyShouldBeMoving");
         // Flip the enemy sprite based on direction

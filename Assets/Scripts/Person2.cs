@@ -69,6 +69,7 @@ public class Person2 : MonoBehaviour
         }
         if (Collider.gameObject.tag == ("EnemyDetectionRadious"))
         {
+            Debug.Log("BeingDetected");
             Collider.gameObject.GetComponent<EnemyDetectionSphere>().Target.gameObject.GetComponent<EnemyControls>().PlayerDetect();
         }
     }
